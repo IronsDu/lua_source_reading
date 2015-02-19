@@ -232,11 +232,11 @@ static int luaK_code (FuncState *fs, Instruction i) {
   /* put new instruction in code array */
   luaM_growvector(fs->ls->L, f->code, fs->pc, f->sizecode, Instruction,
                   MAX_INT, "opcodes");
-  f->code[fs->pc] = i;
+  f->code[fs->pc] = i;                      /*保存指令*/
   /* save corresponding line information */
   luaM_growvector(fs->ls->L, f->lineinfo, fs->pc, f->sizelineinfo, int,
                   MAX_INT, "opcodes");
-  f->lineinfo[fs->pc] = fs->ls->lastline;
+  f->lineinfo[fs->pc] = fs->ls->lastline;   /*保存当前指令位置所对应的代码行号--用于debug info*/
   return fs->pc++;
 }
 

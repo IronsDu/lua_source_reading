@@ -162,6 +162,7 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 ** grep "ORDER OP" if you change these enums
 */
 
+/*–Èƒ‚÷∏¡ÓOP*/
 typedef enum {
 /*----------------------------------------------------------------------
 name		args	description

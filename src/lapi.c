@@ -60,12 +60,14 @@ const char lua_ident[] =
 static TValue *index2addr (lua_State *L, int idx) {
   CallInfo *ci = L->ci;
   if (idx > 0) {
+      /*如果索引大于0，则表示访问当前函数调用中的局部变量(local变量+函数参数) */
     TValue *o = ci->func + idx;
     api_check(idx <= ci->top - (ci->func + 1), "unacceptable index");
     if (o >= L->top) return NONVALIDVALUE;
     else return o;
   }
   else if (!ispseudo(idx)) {  /* negative index */
+      /*    以L->top 为基地址访问栈上的(运行时)变量  */
     api_check(idx != 0 && -idx <= L->top - (ci->func + 1), "invalid index");
     return L->top + idx;
   }
@@ -77,6 +79,7 @@ static TValue *index2addr (lua_State *L, int idx) {
     if (ttislcf(ci->func))  /* light C function? */
       return NONVALIDVALUE;  /* it has no upvalues */
     else {
+        /*  根据ci->func找到在栈上的函数对象信息(闭包)，然后通过变量索引取其中的upvalue    */
       CClosure *func = clCvalue(ci->func);
       return (idx <= func->nupvalues) ? &func->upvalue[idx-1] : NONVALIDVALUE;
     }
@@ -583,7 +586,9 @@ LUA_API int lua_getglobal (lua_State *L, const char *name) {
   const TValue *gt;  /* global table */
   lua_lock(L);
   gt = luaH_getint(reg, LUA_RIDX_GLOBALS);
+  /*生成一个value放入到栈顶*/
   setsvalue2s(L, L->top++, luaS_new(L, name));
+  /*    然后调用luaV_gettable获取值    */
   luaV_gettable(L, gt, L->top - 1, L->top - 1);
   lua_unlock(L);
   return ttnov(L->top - 1);

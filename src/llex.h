@@ -46,22 +46,23 @@ typedef union {
   TString *ts;
 } SemInfo;  /* semantics information */
 
-
+/*  词法分析中的词素    */
 typedef struct Token {
-  int token;
-  SemInfo seminfo;
+    int token;            /*类型*/
+    SemInfo seminfo;          /*数据*/
 } Token;
 
 
 /* state of the lexer plus state of the parser when shared by all
    functions */
+/*  词法分析  */
 typedef struct LexState {
   int current;  /* current character (charint) */
   int linenumber;  /* input line counter */
-  int lastline;  /* line of last token 'consumed' */
-  Token t;  /* current token */
-  Token lookahead;  /* look ahead token */
-  struct FuncState *fs;  /* current function (parser) */
+  int lastline;  /* line of last token 'consumed' */    /*最后一个token的行号*/
+  Token t;  /* current token */ /*  当前token */
+  Token lookahead;  /* look ahead token */  /*  后一个token    */
+  struct FuncState *fs;  /* current function (parser) */    /*当前所解析的函数*/
   struct lua_State *L;
   ZIO *z;  /* input stream */
   Mbuffer *buff;  /* buffer for tokens */

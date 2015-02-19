@@ -63,13 +63,13 @@ typedef struct stringtable {
 ** function can be called with the correct top.
 */
 typedef struct CallInfo {
-  StkId func;  /* function index in the stack */
-  StkId	top;  /* top for this function */
-  struct CallInfo *previous, *next;  /* dynamic call link */
+    StkId func;  /* function index in the stack */    /*    当前函数相关信息(比如闭包对象)在整个stack中的地址  */
+    StkId	top;  /* top for this function */               /* 当前函数可用区域的尾部  */
+    struct CallInfo *previous, *next;  /* dynamic call link */    /*    调用链表    */
   union {
     struct {  /* only for Lua functions */
-      StkId base;  /* base for this function */
-      const Instruction *savedpc;
+        StkId base;  /* base for this function */             /*    (寄存器)   缓冲区的起始位置(实际参数也是放到它开始的地址之后） 如果有变参数的话，变参则放在 func~base之间!   */
+        const Instruction *savedpc;                           /*当前pc*/
     } l;
     struct {  /* only for C functions */
       lua_KFunction k;  /* continuation in case of yields */
@@ -149,12 +149,13 @@ typedef struct global_State {
 struct lua_State {
   CommonHeader;
   lu_byte status;
-  StkId top;  /* first free slot in the stack */
+  StkId top;  /* first free slot in the stack */    /*  运行时栈顶   */
   global_State *l_G;
-  CallInfo *ci;  /* call info for current function */
+  CallInfo *ci;  /* call info for current function */   /*  当前调用的函数 */
   const Instruction *oldpc;  /* last pc traced */
-  StkId stack_last;  /* last free slot in the stack */
-  StkId stack;  /* stack base */
+  StkId stack_last;  /* last free slot in the stack */  /*  栈尾  */
+  StkId stack;  /* stack base */                        /*  栈底  */
+                                                        /*    [stack~ stack_last] 则表示整个运行时栈  */
   UpVal *openupval;  /* list of open upvalues in this stack */
   GCObject *gclist;
   struct lua_State *twups;  /* list of threads with open upvalues */

@@ -386,19 +386,20 @@ typedef struct Upvaldesc {
 ** (used for debug information)
 */
 typedef struct LocVar {
-  TString *varname;
-  int startpc;  /* first point where variable is active */
-  int endpc;    /* first point where variable is dead */
+    TString *varname; /*变量名称*/
+    int startpc;  /* first point where variable is active */  /*变量初始化pc*/
+    int endpc;    /* first point where variable is dead */        /*变量生命周期结束的pc*/
 } LocVar;
 
 
+/*函数原型：函数相关属性*/
 /*
 ** Function Prototypes
 */
 typedef struct Proto {
   CommonHeader;
-  lu_byte numparams;  /* number of fixed parameters */
-  lu_byte is_vararg;
+  lu_byte numparams;  /* number of fixed parameters */  /*函数参数个数*/
+  lu_byte is_vararg;    /*函数是否有不定参数*/
   lu_byte maxstacksize;  /* maximum stack used by this function */
   int sizeupvalues;  /* size of 'upvalues' */
   int sizek;  /* size of 'k' */
@@ -409,10 +410,10 @@ typedef struct Proto {
   int linedefined;
   int lastlinedefined;
   TValue *k;  /* constants used by the function */
-  Instruction *code;
+  Instruction *code;    /*函数生成的code(虚拟机指令)*/
   struct Proto **p;  /* functions defined inside the function */
-  int *lineinfo;  /* map from opcodes to source lines (debug information) */
-  LocVar *locvars;  /* information about local variables (debug information) */
+  int *lineinfo;  /* map from opcodes to source lines (debug information) */    /*保存当前指令位置(pc)所对应的的代码行号*/
+  LocVar *locvars;  /* information about local variables (debug information) */ /*局部变量*/
   Upvaldesc *upvalues;  /* upvalue information */
   struct LClosure *cache;  /* last created closure with this prototype */
   TString  *source;  /* used for debug information */

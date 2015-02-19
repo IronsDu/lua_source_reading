@@ -36,6 +36,7 @@
 
 
 /* ORDER RESERVED */
+/*关键字，于 TOKEN的定义顺序一致    ，即TK_FUNCTION跟"function"关联  */
 static const char *const luaX_tokens [] = {
     "and", "break", "do", "else", "elseif",
     "end", "false", "for", "function", "goto", "if",
@@ -463,7 +464,7 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
                                    luaZ_bufflen(ls->buff) - 2);
 }
 
-
+/*  词法分析，返回token，并将token相关信息保存在seminfo中 */
 static int llex (LexState *ls, SemInfo *seminfo) {
   luaZ_resetbuffer(ls->buff);
   for (;;) {
@@ -582,10 +583,11 @@ static int llex (LexState *ls, SemInfo *seminfo) {
   }
 }
 
-
+/*  取得一个token  */
 void luaX_next (LexState *ls) {
   ls->lastline = ls->linenumber;
   if (ls->lookahead.token != TK_EOS) {  /* is there a look-ahead token? */
+      /*  如果后续token存在，则返回它，然后将后续清0    */
     ls->t = ls->lookahead;  /* use this one */
     ls->lookahead.token = TK_EOS;  /* and discharge it */
   }
@@ -593,7 +595,7 @@ void luaX_next (LexState *ls) {
     ls->t.token = llex(ls, &ls->t.seminfo);  /* read next token */
 }
 
-
+/*取得(当前token的)下一个token*/
 int luaX_lookahead (LexState *ls) {
   lua_assert(ls->lookahead.token == TK_EOS);
   ls->lookahead.token = llex(ls, &ls->lookahead.seminfo);

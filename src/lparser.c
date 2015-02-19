@@ -46,12 +46,12 @@
 ** nodes for block list (list of active blocks)
 */
 typedef struct BlockCnt {
-  struct BlockCnt *previous;  /* chain */
-  int firstlabel;  /* index of first label in this block */
+    struct BlockCnt *previous;  /* chain */   /*它的上一个block（所属block,父block)*/
+  int firstlabel;  /* index of first label in this block */ /*  当前block的label计数，这用于代码生成时的jump语句   */
   int firstgoto;  /* index of first pending goto in this block */
   lu_byte nactvar;  /* # active locals outside the block */
   lu_byte upval;  /* true if some variable in the block is an upvalue */
-  lu_byte isloop;  /* true if 'block' is a loop */
+  lu_byte isloop;  /* true if 'block' is a loop */  /*此block是否处于循环*/
 } BlockCnt;
 
 
@@ -93,7 +93,7 @@ static void checklimit (FuncState *fs, int v, int l, const char *what) {
   if (v > l) errorlimit(fs, l, what);
 }
 
-
+/*强制约束当前token 为 c，且读取下一个token*/
 static int testnext (LexState *ls, int c) {
   if (ls->t.token == c) {
     luaX_next(ls);
@@ -109,6 +109,7 @@ static void check (LexState *ls, int c) {
 }
 
 
+/*判断当前token，并获取下一个token*/
 static void checknext (LexState *ls, int c) {
   check(ls, c);
   luaX_next(ls);
@@ -131,7 +132,7 @@ static void check_match (LexState *ls, int what, int who, int where) {
   }
 }
 
-
+/*约束当前token是否为TK_NAME，并读取下一个token，返回值为TK NAME的name*/
 static TString *str_checkname (LexState *ls) {
   TString *ts;
   check(ls, TK_NAME);
@@ -170,7 +171,7 @@ static int registerlocalvar (LexState *ls, TString *varname) {
   return fs->nlocvars++;
 }
 
-
+/*添加一个局部变量*/
 static void new_localvar (LexState *ls, TString *name) {
   FuncState *fs = ls->fs;
   Dyndata *dyd = ls->dyd;
@@ -202,7 +203,7 @@ static void adjustlocalvars (LexState *ls, int nvars) {
   FuncState *fs = ls->fs;
   fs->nactvar = cast_byte(fs->nactvar + nvars);
   for (; nvars; nvars--) {
-    getlocvar(fs, fs->nactvar - nvars)->startpc = fs->pc;
+      getlocvar(fs, fs->nactvar - nvars)->startpc = fs->pc;   /*设置变量的初始化pc*/
   }
 }
 
@@ -430,7 +431,7 @@ static void movegotosout (FuncState *fs, BlockCnt *bl) {
   }
 }
 
-
+/*进入一个block(变量作用域相关)*/
 static void enterblock (FuncState *fs, BlockCnt *bl, lu_byte isloop) {
   bl->isloop = isloop;
   bl->nactvar = fs->nactvar;
@@ -519,10 +520,10 @@ static void codeclosure (LexState *ls, expdesc *v) {
   luaK_exp2nextreg(fs, v);  /* fix it at the last register */
 }
 
-
+/*开始parse一个函数*/
 static void open_func (LexState *ls, FuncState *fs, BlockCnt *bl) {
   Proto *f;
-  fs->prev = ls->fs;  /* linked list of funcstates */
+  fs->prev = ls->fs;  /* linked list of funcstates */   /*把ls的当前所解析的函数设置为即将解析的函数的前驱*/
   fs->ls = ls;
   ls->fs = fs;
   fs->pc = 0;
@@ -588,12 +589,12 @@ static int block_follow (LexState *ls, int withuntil) {
   }
 }
 
-
+/*解析语句块 {}*/
 static void statlist (LexState *ls) {
   /* statlist -> { stat [';'] } */
   while (!block_follow(ls, 1)) {
     if (ls->t.token == TK_RETURN) {
-      statement(ls);
+        statement(ls);    /*如果token为return，则解析单个语句，然后{}的解析结束。*/
       return;  /* 'return' must be last statement */
     }
     statement(ls);
@@ -743,17 +744,17 @@ static void constructor (LexState *ls, expdesc *t) {
 /* }====================================================================== */
 
 
-
+/*解析函数实参列表*/
 static void parlist (LexState *ls) {
   /* parlist -> [ param { ',' param } ] */
   FuncState *fs = ls->fs;
   Proto *f = fs->f;
   int nparams = 0;
   f->is_vararg = 0;
-  if (ls->t.token != ')') {  /* is 'parlist' not empty? */
+  if (ls->t.token != ')') {  /* is 'parlist' not empty? */  /*判断token是否为')'--是否为空*/
     do {
       switch (ls->t.token) {
-        case TK_NAME: {  /* param -> NAME */
+      case TK_NAME: {  /* param -> NAME */    /*如果是一个字符串（名称），则构造一个局部变量*/
           new_localvar(ls, str_checkname(ls));
           nparams++;
           break;
@@ -763,9 +764,9 @@ static void parlist (LexState *ls) {
           f->is_vararg = 1;
           break;
         }
-        default: luaX_syntaxerror(ls, "<name> or '...' expected");
+        default: luaX_syntaxerror(ls, "<name> or '...' expected");  /*如果不是name，也不是...，则提示语法错误*/
       }
-    } while (!f->is_vararg && testnext(ls, ','));
+    } while (!f->is_vararg && testnext(ls, ','));   /*如果当前没有...，且当前token不是，，则退出循环（表示没有参数了）*/
   }
   adjustlocalvars(ls, nparams);
   f->numparams = cast_byte(fs->nactvar);
@@ -780,26 +781,26 @@ static void body (LexState *ls, expdesc *e, int ismethod, int line) {
   new_fs.f = addprototype(ls);
   new_fs.f->linedefined = line;
   open_func(ls, &new_fs, &bl);
-  checknext(ls, '(');
+  checknext(ls, '(');   /*函数名字之后就是'('*/
   if (ismethod) {
     new_localvarliteral(ls, "self");  /* create 'self' parameter */
     adjustlocalvars(ls, 1);
   }
-  parlist(ls);
-  checknext(ls, ')');
-  statlist(ls);
+  parlist(ls);          /*解析实际参数列表*/
+  checknext(ls, ')');   /*实际参数之后就是')'了*/
+  statlist(ls);         /*解析函数体， 就是语句块 {]*/
   new_fs.f->lastlinedefined = ls->linenumber;
   check_match(ls, TK_END, TK_FUNCTION, line);
   codeclosure(ls, e);
   close_func(ls);
 }
 
-
+/*解析表达式列表,返回表达式个数*/
 static int explist (LexState *ls, expdesc *v) {
   /* explist -> expr { ',' expr } */
   int n = 1;  /* at least one expression */
-  expr(ls, v);
-  while (testnext(ls, ',')) {
+  expr(ls, v);  /*解析第一个表示（因为至少一个表达式）*/
+  while (testnext(ls, ',')) {       /*如果下一个token为，则继续解析表达式*/
     luaK_exp2nextreg(ls->fs, v);
     expr(ls, v);
     n++;
@@ -959,10 +960,13 @@ static void simpleexp (LexState *ls, expdesc *v) {
       init_exp(v, VVARARG, luaK_codeABC(fs, OP_VARARG, 0, 1, 0));
       break;
     }
+
+      /*表*/
     case '{': {  /* constructor */
       constructor(ls, v);
       return;
     }
+      /*函数声明(也是表达式，值就是函数)*/
     case TK_FUNCTION: {
       luaX_next(ls);
       body(ls, v, 0, ls->linenumber);
@@ -1435,23 +1439,27 @@ static void localfunc (LexState *ls) {
   getlocvar(fs, b.u.info)->startpc = fs->pc;
 }
 
-
+/*解析局部变量定义*/
 static void localstat (LexState *ls) {
   /* stat -> LOCAL NAME {',' NAME} ['=' explist] */
   int nvars = 0;
   int nexps;
   expdesc e;
+
+  /*解析变量列表，譬如：a, b, c */
   do {
     new_localvar(ls, str_checkname(ls));
     nvars++;
   } while (testnext(ls, ','));
   if (testnext(ls, '='))
-    nexps = explist(ls, &e);
+      nexps = explist(ls, &e);    /*如果是 a,bc= xxx， 则要解析 xxx表达式列表*/
   else {
     e.k = VVOID;
     nexps = 0;
   }
   adjust_assign(ls, nvars, nexps, &e);
+
+  /*设置这新加的变量的初始化pc*/
   adjustlocalvars(ls, nvars);
 }
 
@@ -1530,7 +1538,7 @@ static void retstat (LexState *ls) {
   testnext(ls, ';');  /* skip optional semicolon */
 }
 
-
+/*解析语句*/
 static void statement (LexState *ls) {
   int line = ls->linenumber;  /* may be needed for error messages */
   enterlevel(ls);

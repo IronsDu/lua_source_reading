@@ -38,6 +38,7 @@ typedef enum {
 #define vkisvar(k)	(VLOCAL <= (k) && (k) <= VINDEXED)
 #define vkisinreg(k)	((k) == VNONRELOC || (k) == VLOCAL)
 
+/*表达式描述信息*/
 typedef struct expdesc {
   expkind k;
   union {
@@ -55,16 +56,18 @@ typedef struct expdesc {
 } expdesc;
 
 
+/*变量在stack中的index*/
 /* description of active local variable */
 typedef struct Vardesc {
   short idx;  /* variable index in stack */
 } Vardesc;
 
 
+/*label相关属性*/
 /* description of pending goto statements and label statements */
 typedef struct Labeldesc {
-  TString *name;  /* label identifier */
-  int pc;  /* position in code */
+    TString *name;  /* label identifier */    /*label的名字*/
+    int pc;  /* position in code */ /*label在代码中的pc地址*/
   int line;  /* line where it appeared */
   lu_byte nactvar;  /* local level where it appears in current block */
 } Labeldesc;
@@ -94,19 +97,20 @@ typedef struct Dyndata {
 struct BlockCnt;  /* defined in lparser.c */
 
 
+/*词法分析中的一个函数相关状态*/
 /* state needed to generate code for a given function */
 typedef struct FuncState {
   Proto *f;  /* current function header */
-  struct FuncState *prev;  /* enclosing function */
-  struct LexState *ls;  /* lexical state */
+  struct FuncState *prev;  /* enclosing function */ /*它的上一个函数（也即调用者）*/
+  struct LexState *ls;  /* lexical state */ /*当前词法分析状态*/
   struct BlockCnt *bl;  /* chain of current blocks */
-  int pc;  /* next position to code (equivalent to 'ncode') */
+  int pc;  /* next position to code (equivalent to 'ncode') */  /*当前code(代码生成)的pc（地址）*/
   int lasttarget;   /* 'label' of last 'jump label' */
   int jpc;  /* list of pending jumps to 'pc' */
   int nk;  /* number of elements in 'k' */
   int np;  /* number of elements in 'p' */
   int firstlocal;  /* index of first local var (in Dyndata array) */
-  short nlocvars;  /* number of elements in 'f->locvars' */
+  short nlocvars;  /* number of elements in 'f->locvars' */ /*当前局部变量计数*/
   lu_byte nactvar;  /* number of active local variables */
   lu_byte nups;  /* number of upvalues */
   lu_byte freereg;  /* first free register */
