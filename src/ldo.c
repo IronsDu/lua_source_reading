@@ -82,7 +82,7 @@
 
 /* chain list of long jump buffers */
 struct lua_longjmp {
-  struct lua_longjmp *previous;
+    struct lua_longjmp *previous; /*上一个恢复点*/
   luai_jmpbuf b;
   volatile int status;  /* error code */
 };
@@ -304,7 +304,7 @@ static void tryfuncTM (lua_State *L, StkId func) {
 }
 
 
-
+/*新生成CallInfo- 函数调用信息*/
 #define next_ci(L) (L->ci = (L->ci->next ? L->ci->next : luaE_extendCI(L)))
 
 
@@ -378,7 +378,7 @@ int luaD_precall (lua_State *L, StkId func, int nresults) {
   }
 }
 
-
+/*退栈，回到上一个调用函数*/
 int luaD_poscall (lua_State *L, StkId firstResult) {
   StkId res;
   int wanted, i;
@@ -576,7 +576,7 @@ LUA_API int lua_resume (lua_State *L, lua_State *from, int nargs) {
   L->nCcalls = (from) ? from->nCcalls + 1 : 1;
   L->nny = 0;  /* allow yields */
   api_checknelems(L, (L->status == LUA_OK) ? nargs + 1 : nargs);
-  status = luaD_rawrunprotected(L, resume, L->top - nargs);
+  status = luaD_rawrunprotected(L, resume, L->top - nargs); /*在luaD_rawrunprotected里调用 resume，其中会设置恢复点， 当另外的协成yield时，会回到执行点继续执行这个协成*/
   if (status == -1)  /* error calling 'lua_resume'? */
     status = LUA_ERRRUN;
   else {  /* continue running after recoverable errors */
@@ -625,7 +625,7 @@ LUA_API int lua_yieldk (lua_State *L, int nresults, lua_KContext ctx,
     if ((ci->u.c.k = k) != NULL)  /* is there a continuation? */
       ci->u.c.ctx = ctx;  /* save context */
     ci->func = L->top - nresults - 1;  /* protect stack below results */
-    luaD_throw(L, LUA_YIELD);
+    luaD_throw(L, LUA_YIELD);       /*通过抛出异常的方式(long jmp)， 跳转到调用者协成*/
   }
   lua_assert(ci->callstatus & CIST_HOOKED);  /* must be inside a hook */
   lua_unlock(L);

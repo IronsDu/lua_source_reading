@@ -401,20 +401,20 @@ typedef struct Proto {
   lu_byte numparams;  /* number of fixed parameters */  /*函数参数个数*/
   lu_byte is_vararg;    /*函数是否有不定参数*/
   lu_byte maxstacksize;  /* maximum stack used by this function */
-  int sizeupvalues;  /* size of 'upvalues' */
-  int sizek;  /* size of 'k' */
+  int sizeupvalues;  /* size of 'upvalues' */   /*upvalue表的大小*/
+  int sizek;  /* size of 'k' */ /*常量表的大小*/
   int sizecode;
   int sizelineinfo;
   int sizep;  /* size of 'p' */
   int sizelocvars;
   int linedefined;
   int lastlinedefined;
-  TValue *k;  /* constants used by the function */
+  TValue *k;  /* constants used by the function */                              /*函数所用到的常量表*/
   Instruction *code;    /*函数生成的code(虚拟机指令)*/
-  struct Proto **p;  /* functions defined inside the function */
+  struct Proto **p;  /* functions defined inside the function */                /*函数原型属性等相关信息*/
   int *lineinfo;  /* map from opcodes to source lines (debug information) */    /*保存当前指令位置(pc)所对应的的代码行号*/
-  LocVar *locvars;  /* information about local variables (debug information) */ /*局部变量*/
-  Upvaldesc *upvalues;  /* upvalue information */
+  LocVar *locvars;  /* information about local variables (debug information) */ /*局部变量调试信息*/
+  Upvaldesc *upvalues;  /* upvalue information */                               /*闭包的upvalue的相关信息*/
   struct LClosure *cache;  /* last created closure with this prototype */
   TString  *source;  /* used for debug information */
   GCObject *gclist;
@@ -431,24 +431,25 @@ typedef struct UpVal UpVal;
 /*
 ** Closures
 */
-
+/*nupvalues为闭包中上值的个数*/
 #define ClosureHeader \
 	CommonHeader; lu_byte nupvalues; GCObject *gclist
 
+/*C闭包函数*/
 typedef struct CClosure {
   ClosureHeader;
   lua_CFunction f;
   TValue upvalue[1];  /* list of upvalues */
 } CClosure;
 
-
+/*lua闭包函数*/
 typedef struct LClosure {
   ClosureHeader;
   struct Proto *p;
   UpVal *upvals[1];  /* list of upvalues */
 } LClosure;
 
-
+/*闭包*/
 typedef union Closure {
   CClosure c;
   LClosure l;

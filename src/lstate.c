@@ -103,7 +103,7 @@ void luaE_setdebt (global_State *g, l_mem debt) {
   g->GCdebt = debt;
 }
 
-
+/*新生成一个CallInfo，用于call调用*/
 CallInfo *luaE_extendCI (lua_State *L) {
   CallInfo *ci = luaM_new(L, CallInfo);
   lua_assert(L->ci->next == NULL);

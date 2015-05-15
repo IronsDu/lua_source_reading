@@ -63,7 +63,7 @@ typedef struct stringtable {
 ** function can be called with the correct top.
 */
 typedef struct CallInfo {
-    StkId func;  /* function index in the stack */    /*    当前函数相关信息(比如闭包对象)在整个stack中的地址  */
+    StkId func;  /* function index in the stack */    /*    当前函数相关信息(比如闭包对象)在整个stack中的地址(也即变量作用于的起始地址)  [func~top]表示它的空间  */
     StkId	top;  /* top for this function */               /* 当前函数可用区域的尾部  */
     struct CallInfo *previous, *next;  /* dynamic call link */    /*    调用链表    */
   union {
@@ -71,14 +71,14 @@ typedef struct CallInfo {
         StkId base;  /* base for this function */             /*    (寄存器)   缓冲区的起始位置(实际参数也是放到它开始的地址之后） 如果有变参数的话，变参则放在 func~base之间!   */
         const Instruction *savedpc;                           /*当前pc*/
     } l;
-    struct {  /* only for C functions */
+    struct {  /* only for C functions */                        /*对于(调用的是)C函数的变量--调用链在C里时*/
       lua_KFunction k;  /* continuation in case of yields */
       ptrdiff_t old_errfunc;
       lua_KContext ctx;  /* context info. in case of yields */
     } c;
   } u;
   ptrdiff_t extra;
-  short nresults;  /* expected number of results from this function */
+  short nresults;  /* expected number of results from this function */  /*调用者所期望的返回值个数*/
   lu_byte callstatus;
 } CallInfo;
 
@@ -101,7 +101,7 @@ typedef struct CallInfo {
 #define setoah(st,v)	((st) = ((st) & ~CIST_OAH) | (v))
 #define getoah(st)	((st) & CIST_OAH)
 
-
+/*全局状态，对应于多个Lua状态机 （一个状态机表示一个执行单元,类似一个CPU)  */
 /*
 ** 'global state', shared by all threads of this state
 */
@@ -149,25 +149,25 @@ typedef struct global_State {
 struct lua_State {
   CommonHeader;
   lu_byte status;
-  StkId top;  /* first free slot in the stack */    /*  运行时栈顶   */
+  StkId top;  /* first free slot in the stack */    /*  当前运行时栈顶位置   */
   global_State *l_G;
   CallInfo *ci;  /* call info for current function */   /*  当前调用的函数 */
   const Instruction *oldpc;  /* last pc traced */
-  StkId stack_last;  /* last free slot in the stack */  /*  栈尾  */
+  StkId stack_last;  /* last free slot in the stack */  /*  整个栈尾  */
   StkId stack;  /* stack base */                        /*  栈底  */
                                                         /*    [stack~ stack_last] 则表示整个运行时栈  */
   UpVal *openupval;  /* list of open upvalues in this stack */
   GCObject *gclist;
   struct lua_State *twups;  /* list of threads with open upvalues */
-  struct lua_longjmp *errorJmp;  /* current error recover point */
-  CallInfo base_ci;  /* CallInfo for first level (C calling Lua) */
+  struct lua_longjmp *errorJmp;  /* current error recover point */  /*当前出错处理(恢复)点*/
+  CallInfo base_ci;  /* CallInfo for first level (C calling Lua) */ /*第一个调用函数（调用链的最底层)*/
   lua_Hook hook;
   ptrdiff_t errfunc;  /* current error handling function (stack index) */
-  int stacksize;
+  int stacksize;                                        /*整个栈  [stack~ stack_last] 的大小*/
   int basehookcount;
   int hookcount;
   unsigned short nny;  /* number of non-yieldable calls in stack */
-  unsigned short nCcalls;  /* number of nested C calls */
+  unsigned short nCcalls;  /* number of nested C calls */   /*调用(函数)层次个数(调用栈里的函数堆栈个数*/
   lu_byte hookmask;
   lu_byte allowhook;
 };

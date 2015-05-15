@@ -60,14 +60,14 @@ const char lua_ident[] =
 static TValue *index2addr (lua_State *L, int idx) {
   CallInfo *ci = L->ci;
   if (idx > 0) {
-      /*如果索引大于0，则表示访问当前函数调用中的局部变量(local变量+函数参数) */
+      /*如果索引大于0，则表示访问当前函数调用中的局部变量--以ci->func为基地址， 这个空间里都是(local变量+函数参数) */
     TValue *o = ci->func + idx;
     api_check(idx <= ci->top - (ci->func + 1), "unacceptable index");
     if (o >= L->top) return NONVALIDVALUE;
     else return o;
   }
-  else if (!ispseudo(idx)) {  /* negative index */
-      /*    以L->top 为基地址访问栈上的(运行时)变量  */
+  else if (!ispseudo(idx)) {  /* negative index */  /*如果为负数*/
+      /*    以L->top 为基地址访问栈上的(运行时)变量(也就是倒着定位)  */
     api_check(idx != 0 && -idx <= L->top - (ci->func + 1), "invalid index");
     return L->top + idx;
   }
@@ -96,7 +96,7 @@ static void growstack (lua_State *L, void *ud) {
   luaD_growstack(L, size);
 }
 
-
+/*检查当前栈空间剩余容量大小，不够的话需要增长*/
 LUA_API int lua_checkstack (lua_State *L, int n) {
   int res;
   CallInfo *ci = L->ci;
@@ -107,7 +107,7 @@ LUA_API int lua_checkstack (lua_State *L, int n) {
   else {  /* no; need to grow stack */
     int inuse = cast_int(L->top - L->stack) + EXTRA_STACK;
     if (inuse > LUAI_MAXSTACK - n)  /* can grow without overflow? */
-      res = 0;  /* no */
+        res = 0;  /* no *//*不能扩展了,达到stack规定的上限了*/
     else  /* try to grow stack */
       res = (luaD_rawrunprotected(L, &growstack, &n) == LUA_OK);
   }

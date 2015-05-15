@@ -104,13 +104,13 @@ typedef struct FuncState {
   struct FuncState *prev;  /* enclosing function */ /*它的上一个函数（也即调用者）*/
   struct LexState *ls;  /* lexical state */ /*当前词法分析状态*/
   struct BlockCnt *bl;  /* chain of current blocks */
-  int pc;  /* next position to code (equivalent to 'ncode') */  /*当前code(代码生成)的pc（地址）*/
+  int pc;  /* next position to code (equivalent to 'ncode') */  /*当前所生成的code(代码生成)的pc（地址）*/
   int lasttarget;   /* 'label' of last 'jump label' */
   int jpc;  /* list of pending jumps to 'pc' */
   int nk;  /* number of elements in 'k' */
   int np;  /* number of elements in 'p' */
   int firstlocal;  /* index of first local var (in Dyndata array) */
-  short nlocvars;  /* number of elements in 'f->locvars' */ /*当前局部变量计数*/
+  short nlocvars;  /* number of elements in 'f->locvars' */ /*当前局部变量计数(当前个数，索引)*/
   lu_byte nactvar;  /* number of active local variables */
   lu_byte nups;  /* number of upvalues */
   lu_byte freereg;  /* first free register */
