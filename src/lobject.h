@@ -445,7 +445,7 @@ typedef struct CClosure {
 /*lua闭包函数*/
 typedef struct LClosure {
   ClosureHeader;
-  struct Proto *p;
+  struct Proto *p;  /*所指向的函数原型函数对象， 其中有譬如字节码的代码区域（用于执行）*/
   UpVal *upvals[1];  /* list of upvalues */
 } LClosure;
 

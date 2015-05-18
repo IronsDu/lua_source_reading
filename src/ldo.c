@@ -395,6 +395,7 @@ int luaD_poscall (lua_State *L, StkId firstResult) {
   wanted = ci->nresults;
   L->ci = ci = ci->previous;  /* back to caller */
   /* move results to correct place */
+  /*把函数返回值放入调用者的栈上*/
   for (i = wanted; i != 0 && firstResult < L->top; i--)
     setobjs2s(L, res++, firstResult++);
   while (i-- > 0)

@@ -655,7 +655,7 @@ void luaV_execute (lua_State *L) {
  newframe:  /* reentry point when frame changes (call/return) */
   lua_assert(ci == L->ci);
   cl = clLvalue(ci->func);
-  k = cl->p->k; /*  常量表 */
+  k = cl->p->k; /*  常量表 (譬如一些常量字符串，以及  a()  这个"a"也是常量--这个call会先获取"a"的值 */
   base = ci->u.l.base;
   /* main loop of interpreter */
   for (;;) {

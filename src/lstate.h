@@ -63,18 +63,18 @@ typedef struct stringtable {
 ** function can be called with the correct top.
 */
 typedef struct CallInfo {
-    StkId func;  /* function index in the stack */    /*    当前函数相关信息(比如闭包对象)在整个stack中的地址(也即变量作用于的起始地址)  [func~top]表示它的空间  */
+    StkId func;  /* function index in the stack */    /*    当前函数对象(它是最先入栈的)在整个stack中的地址  且[func~top]就表示它的空间   (lua里调用函数时是先获取此函数对象，然后入栈了的)  */
     StkId	top;  /* top for this function */               /* 当前函数可用区域的尾部  */
     struct CallInfo *previous, *next;  /* dynamic call link */    /*    调用链表    */
   union {
     struct {  /* only for Lua functions */
-        StkId base;  /* base for this function */             /*    (寄存器)   缓冲区的起始位置(实际参数也是放到它开始的地址之后） 如果有变参数的话，变参则放在 func~base之间!   */
+        StkId base;  /* base for this function */             /*    (寄存器)   缓冲区的起始位置(固定参数是放到它之后） 如果有变参数的话，变参则放在 func~base之间!   */
         const Instruction *savedpc;                           /*当前pc*/
     } l;
     struct {  /* only for C functions */                        /*对于(调用的是)C函数的变量--调用链在C里时*/
-      lua_KFunction k;  /* continuation in case of yields */
-      ptrdiff_t old_errfunc;
-      lua_KContext ctx;  /* context info. in case of yields */
+        lua_KFunction k;  /* continuation in case of yields */    /*用于C 服务函数里进入Lua后，但想Lua里yield后， 可以执行一些回调*/
+        ptrdiff_t old_errfunc;                                    /*进入此函数前，LuaState的错误处理函数*/
+      lua_KContext ctx;  /* context info. in case of yields */  /*回调函数的上下文参数*/
     } c;
   } u;
   ptrdiff_t extra;
@@ -162,7 +162,7 @@ struct lua_State {
   struct lua_longjmp *errorJmp;  /* current error recover point */  /*当前出错处理(恢复)点*/
   CallInfo base_ci;  /* CallInfo for first level (C calling Lua) */ /*第一个调用函数（调用链的最底层)*/
   lua_Hook hook;
-  ptrdiff_t errfunc;  /* current error handling function (stack index) */
+  ptrdiff_t errfunc;  /* current error handling function (stack index) */   /*当前错误处理函数在栈中的位置（地址）*/
   int stacksize;                                        /*整个栈  [stack~ stack_last] 的大小*/
   int basehookcount;
   int hookcount;

@@ -939,6 +939,7 @@ LUA_API int lua_pcallk (lua_State *L, int nargs, int nresults, int errfunc,
     api_checkstackindex(errfunc, o);
     func = savestack(L, o);
   }
+  /*要调用的函数*/
   c.func = L->top - (nargs+1);  /* function to be called */
   if (k == NULL || L->nny > 0) {  /* no continuation or no yieldable? */
     c.nresults = nresults;  /* do a 'conventional' protected call */
@@ -950,8 +951,8 @@ LUA_API int lua_pcallk (lua_State *L, int nargs, int nresults, int errfunc,
     ci->u.c.ctx = ctx;  /* save context */
     /* save information for error recovery */
     ci->extra = savestack(L, c.func);
-    ci->u.c.old_errfunc = L->errfunc;
-    L->errfunc = func;
+    ci->u.c.old_errfunc = L->errfunc;   /*保存当前错误处理函数*/
+    L->errfunc = func;  /*设置错误处理函数*/
     setoah(ci->callstatus, L->allowhook);  /* save value of 'allowhook' */
     ci->callstatus |= CIST_YPCALL;  /* function can do error recovery */
     luaD_call(L, c.func, nresults, 1);  /* do the call */
